@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS</title>
+<style>
+body{background:#0a0a0a;color:white;font-family:system-ui;padding:20px;text-align:center}
+input{width:90%;padding:12px;border-radius:8px;border:1px solid #333;background:#111;color:white;margin:10px 0}
+button{padding:12px 20px;border-radius:8px;background:#00d2ff;color:black;font-weight:bold;border:none;cursor:pointer}
+a{color:#00d2ff}
+#chat{margin-top:20px;text-align:left;max-width:600px;margin-inline:auto}
+</style>
+</head>
+<body>
+<h2>JARVIS</h2>
+<p>Señor, necesito su clave gratuita de Google Gemini para poder pensar</p>
+<p><a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio - Consigue tu API Key aquí</a></p>
+
+<input id="apiKey" type="password" placeholder="Pegue aquí su clave (Empieza con AIza...)" />
+<br>
+<button onclick="guardar()">Comprobar y guardar</button>
+<p id="status"></p>
+<div id="chat"></div>
+
+<script>
+const MODEL = "gemini-1.5-flash"; // ARREGLADO - antes tenias 2.5 que no existe
+let claveGuardada = localStorage.getItem("gemini_key") || "";
+
+async function guardar(){
+  const apiKey = document.getElementById("apiKey").value.trim() || claveGuardada;
+  if(!apiKey){ alert("Pega la clave primero"); return; }
+  
+  document.getElementById("status").innerText = "Comprobando...";
+  
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "Hola" }] }]
+      })
+    });
+    const data = await res.json();
+    
+    if(data.error){
+      document.getElementById("status").innerText = "Error: " + data.error.message;
+      return;
+    }
+    
+    localStorage.setItem("gemini_key", apiKey);
+    claveGuardada = apiKey;
+    document.getElementById("status").innerText = "✅ Clave guardada. JARVIS listo.";
+    document.getElementById("chat").innerHTML = "<p><b>JARVIS:</b> Sistemas en línea, señor. ¿En qué le ayudo?</p>";
+    
+  } catch(e){
+    document.getElementById("status").innerText = "No se pudo completar la petición: " + e.message;
+  }
+}
+
+if(claveGuardada){
+  document.getElementById("apiKey").value = claveGuardada;
+  document.getElementById("status").innerText = "Clave ya guardada, dale a Comprobar y guardar";
+}
+</script>
+</body>
+</html>
